@@ -70,7 +70,12 @@ public class PController implements Runnable, ProtocoloADP{
 	}
 	
 	public void envioADD(int puerto) {
+		System.out.println("Enviando trama ADD...");
 		
+	}
+
+	public void envioADK(int puerto) {
+		System.out.println("Enviando trama ADK...");
 	}
 	
 	public void envioTokenRing(int puerto) {
@@ -82,12 +87,5 @@ public class PController implements Runnable, ProtocoloADP{
 		//Metodo de escucha para recibir la trama de los dos puertos.
 		
 	}
-
-	public void envioADK(int puerto) {
-		System.out.println("Enviando trama ADK...");
-	}
-	
-	
-	
 
 }

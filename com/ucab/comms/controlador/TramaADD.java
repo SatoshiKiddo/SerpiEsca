@@ -4,11 +4,11 @@ import java.util.ArrayList;
 
 public class TramaADD extends Trama implements ITrama {
 	
-	private byte[] direccion_final;
-	private byte[] direccion_inicial;
-	private String control_segmento="0000";
-	private String protocolo_interno;
-	private ArrayList<byte[]> identificadores;
+	protected byte[] direccion_final;
+	protected byte[] direccion_inicial;
+	protected String control_segmento="0000";
+	protected String protocolo_interno;
+	protected ArrayList<byte[]> identificadores;
 	
 	public TramaADD(byte[] identificador, byte[] direccion_final, byte[] direccion_inicial, String protocolo_interno) {
 		this.identificadores.add(identificador);
