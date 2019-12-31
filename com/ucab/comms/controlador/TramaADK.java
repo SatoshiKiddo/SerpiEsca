@@ -6,9 +6,10 @@ public class TramaADK extends TramaADD {
 	
 	private String tablero;
 	
-	public TramaADK(byte[] identificador, byte[] direccion_final, byte[] direccion_inicial, String protocolo_interno, String tablero) {
-		super(identificador,direccion_final,direccion_inicial,protocolo_interno);
+	public TramaADK(byte[] identificador, byte[] direccion_final, byte[] direccion_inicial, String tablero) {
+		super(identificador,direccion_final,direccion_inicial);
 		this.tablero= tablero;
+		this.protocolo_interno="0001";
 	}
 	
 	public byte[] envio_trama() {

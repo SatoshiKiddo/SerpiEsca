@@ -4,17 +4,12 @@ import java.util.ArrayList;
 
 public class TramaADD extends Trama implements ITrama {
 	
-	protected byte[] direccion_final;
-	protected byte[] direccion_inicial;
-	protected String control_segmento="0000";
-	protected String protocolo_interno;
 	protected ArrayList<byte[]> identificadores;
 	
-	public TramaADD(byte[] identificador, byte[] direccion_final, byte[] direccion_inicial, String protocolo_interno) {
+	public TramaADD(byte[] identificador, byte[] direccion_final, byte[] direccion_inicial) {
 		this.identificadores.add(identificador);
 		this.direccion_final= direccion_final;
 		this.direccion_inicial= direccion_inicial;
-		this.protocolo_interno= protocolo_interno;
 	}
 	
 	public void set_protocolo_interno(String protocolo_interno) {
@@ -39,15 +34,10 @@ public class TramaADD extends Trama implements ITrama {
 
 	public byte[] envio_trama() {
 		byte[] trama_envio = new byte[14 + this.identificadores.size() * 7];
-		trama_envio[0]= (byte)Short.parseShort(this.get_preambulo(),2);
-		for(int i=1; i<7; i++) {
-			trama_envio[i]= direccion_final[i];
-		}
-		for(int i=7; i<113; i++) {
-			trama_envio[i]= direccion_inicial[i-7];
-		}
-		trama_envio[14] = (byte) Short.parseShort(control_segmento + protocolo_interno,2);
-		for(int i=15; i< 15 + this.identificadores.size(); i++) {
+		byte[] trama_envio_super= super.envio_trama();
+		for(int i=0; i < 14; i++) 
+			trama_envio[i]=trama_envio_super[i];
+		for(int i=14; i< 16 + this.identificadores.size(); i++) {
 			for(int j=0; j<7; j++) {
 				trama_envio[i + j + ((i - 15) * 7)] = this.identificadores.get(i)[j];
 			}
