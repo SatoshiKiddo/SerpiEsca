@@ -29,6 +29,23 @@ public class DataJugador {
 		}
 	}
 	
+	public static void llenadoData(ArrayList<Byte> buffer, ArrayList<DataJugador> arreglo_data) {
+		String identificador="";
+		for(int i= 14; i< buffer.size(); i++) {
+			switch(ByteConv.byteToString(buffer.get(i+6))) {
+				case "00000000":
+					identificador = "A";
+				case "00000001":
+					identificador = "B";
+				case "00000010":
+					identificador = "C";
+				case "00000011":
+					identificador = "D";
+			}
+			arreglo_data.add(new DataJugador(ByteConv.getMacAddress(buffer, i),identificador));
+		}
+	}
+	
 	public String getMac_address() {
 		return mac_address;
 	}

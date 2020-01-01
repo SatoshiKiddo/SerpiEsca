@@ -1,5 +1,7 @@
 package controlador;
 
+import java.util.ArrayList;
+
 public class Trama {
 
 	protected String preambulo = "01111110";
@@ -28,6 +30,49 @@ public class Trama {
 	
 	public String get_preambulo() {
 		return this.preambulo;
+	}
+	
+	public static byte[] addBytesTrama(byte[] buffer, byte[] add) {
+		byte[] retorno = new byte[buffer.length + add.length];
+		for(int i=0; i<buffer.length; i++) {
+			retorno[i]= buffer[i];
+		}
+		for(int i= buffer.length; i<buffer.length + add.length; i++) {
+			retorno[i]= add[i];
+		}
+		return retorno;
+	}
+	
+	public static byte[] getDireccionFinal(ArrayList<Byte> buffer) {
+		byte[] retorno= new byte[6];
+		for(int i=1; i<7; i++) {
+			retorno[i-1]=buffer.get(i);
+		}
+		return retorno;
+	}
+	
+	public static byte[] getDireccionFinal(byte[] buffer) {
+		byte[] retorno= new byte[6];
+		for(int i=1; i<7; i++) {
+			retorno[i-1]=buffer[i];
+		}
+		return retorno;
+	}
+	
+	public static byte[] getDireccionInicial(ArrayList<Byte> buffer) {
+		byte[] retorno= new byte[6];
+		for(int i=7; i<13; i++) {
+			retorno[i-7]=buffer.get(i);
+		}
+		return retorno;
+	}
+	
+	public static byte[] getDireccionInicial(byte[] buffer) {
+		byte[] retorno= new byte[6];
+		for(int i=7; i<13; i++) {
+			retorno[i-7]=buffer[i];
+		}
+		return retorno;
 	}
 	
 }

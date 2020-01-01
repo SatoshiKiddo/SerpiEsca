@@ -18,6 +18,7 @@ import com.fazecast.jSerialComm.*;
 public class PController implements IProtocoloADP, IProtocoloGDP{
 	
 	private boolean servidor;
+	private long pastTime;
 	//ADP completo y establecido
 	private boolean ADPEstablished = false;
 	private boolean ADKEstablished = false;
@@ -29,6 +30,9 @@ public class PController implements IProtocoloADP, IProtocoloGDP{
 	final private int puerto1 = 0;
 	final private int puerto2 = 1;
 	final private int limitante = 10;
+	//Cantidad de tiempo en segundos para intentar realizar los protocolos.
+	final private int limitanteSeg = 15;
+	final private ArrayList<Byte> buffer= null;
 	
 	public PController(boolean servidor) {
 		this.servidor = servidor;
@@ -109,12 +113,22 @@ public class PController implements IProtocoloADP, IProtocoloGDP{
 		System.out.println("Enviando trama ADK...");
 		
 	}
+	
+	@Override
+	public ArrayList<Byte> lecturaTrama() {
+		// TODO Auto-generated method stub
+		//this.puertos[this.puerto2].readBytes(buffer, buffer.length);
+		while(this.puertos[this.puertoEntrada].bytesAvailable() != 0) {
+			
+		}
+		return null;
+	}
 
 	@Override
 	public void inicioServidorADD() throws Exception {
-		byte[] buffer;
-		int i;
-		int repeticion_paquetes = 0;
+		int envio_paquetes=0;
+		this.pastTime= System.currentTimeMillis();
+		long timeElapsed;
 		// Se genera el inicio del protocolo ADP cumpliendo el papel del servidor.
 		//Se puede agregar como condicion dentro del while un raise event para poder salir y seleccionar cliente.
 		while (!this.ADPEstablished) {
@@ -123,84 +137,70 @@ public class PController implements IProtocoloADP, IProtocoloGDP{
 			//Colocar un cronometro de espera en este punto.
 			//Espera de llegada del paquete.
 			//Se coloca cual es el puerto de entrada  y el puerto de salida
+			timeElapsed= System.currentTimeMillis();
 			this.puertoEntrada= this.puerto2;
 			this.puertoSalida= this.puerto1;
-			i=0;
-			while(this.puertos[this.puerto2].bytesAvailable() < 21) {
+			while(this.puertos[this.puerto2].bytesAvailable() == 0 && timeElapsed >= this.limitanteSeg * 1000 && envio_paquetes < limitante) {
 				try {
-					this.envioADD(this.puerto1);
 					wait(1000);
-					System.out.println("Tiempo transcurrido de espera " + Integer.toString(i) + " segundos...");
-					if(i == 10) {
-						i = -1;
-						break;
-					}
-					i++;
+					this.envioADD(this.puerto1);
+					envio_paquetes++;
 				}
 				catch(Exception e) {
 					System.out.println("Error al intentar esperar la llegada del paquete");
 					e.printStackTrace();
 				}
 			}
-			if(i < 0) {
-				throw new Exception("Protocolo ADP no completado");
-			}
-			buffer= new byte[this.puertos[this.puerto2].bytesAvailable()];
-			this.puertos[this.puerto2].readBytes(buffer, buffer.length);
-			switch(this.desempaquetadoADD(buffer)) {
+			this.RecepcionTrama();
+			switch(this.desempaquetadoADD(this.buffer)) {
 				case -1:
-					if(repeticion_paquetes < limitante)
+					if(envio_paquetes < limitante && timeElapsed >= this.limitanteSeg * 1000)
 						continue;
 					else {
-						throw new Exception("Tiempo agotado para establecer el protocolo ADP");
+						throw new Exception("Tiempo agotado para establecer el protocolo ADP: error ADD");
 					}
+				case 0:
+					this.ADPEstablished= true;
 			}
-			this.ADPEstablished= true;
 		}
 	}
 
 	@Override
 	public void inicioServidorADK() throws Exception {
-		byte[] buffer;
-		int i;
-		int repeticion_paquetes = 0;
+		int envio_paquetes=0;
+		this.pastTime= System.currentTimeMillis();
+		long timeElapsed;
 		while(!this.ADKEstablished) {
 			//Se coloca aca el codigo para llenar la info necesaria sobre los jugadores.
 			String tablero="0000";
 			//Se coloca aca el codigo para seleccionar el valor del tablero.
-			i=0;
+			timeElapsed= System.currentTimeMillis();
+			this.puertoEntrada= this.puerto2;
+			this.puertoSalida= this.puerto1;
 			//Espera de llegada del paquete final
 			System.out.println("Esperando Aknowledgemente de todos los equipos involucrados...");
-			while(this.puertos[this.puerto2].bytesAvailable() < 21) {
+			while(this.puertos[this.puerto2].bytesAvailable() == 0 && timeElapsed >= this.limitanteSeg * 1000 && envio_paquetes < limitante) {
 				try {
 					this.envioADK(this.puerto2, tablero);
 					wait(1000);
-					System.out.println("Tiempo transcurrido de espera " + Integer.toString(i) + " segundos...");
-					if(i == 10) {
-						i = -1;
-						break;
-					}
-					i++;
+					envio_paquetes++;
 				}
 				catch(Exception e) {
 					System.out.println("Error al intentar esperar la llegada del paquete");
 					e.printStackTrace();
 				}
 			}
-			if(i < 0) {
-				throw new Exception("Protocolo ADP no completado");
-			}
-			buffer= new byte[this.puertos[this.puerto2].bytesAvailable()];
-			this.puertos[this.puerto2].readBytes(buffer, buffer.length);
-			switch(this.desempaquetadoADK(buffer)) {
+			this.RecepcionTrama();
+			switch(this.desempaquetadoADK(this.buffer)) {
 				case -1:
-					if(repeticion_paquetes < limitante)
+					if(envio_paquetes < limitante && timeElapsed >= this.limitanteSeg * 1000)
 						continue;
 					else {
-						throw new Exception("Tiempo agotado para establecer el protocolo ADP");
+						throw new Exception("Tiempo agotado para establecer el protocolo ADP: error ADK");
 					}
+				case 0:
+					this.ADKEstablished = true;
 			}
-			this.ADKEstablished = true;
 		}
 		
 	}
@@ -212,21 +212,38 @@ public class PController implements IProtocoloADP, IProtocoloGDP{
 	}
 
 	@Override
-	public int desempaquetadoADK(byte[] buffer) {
+	public int desempaquetadoADK(ArrayList<Byte>  buffer) {
 		if(desempaquetadoTrama(buffer) == 1 ) {
-			
+			if(desempaquetadoTrama(buffer) == 2 ) {
+				if(this.servidor) {
+					//El servidor al tener esta informacion, comienza el protocolo GDP
+				}
+				else {
+					//Agregado de identificador y envio al siguiente nodo, pasando la informacion ADD.
+					byte[] reenvio= ByteConv.arrayListByteToArrayByte(buffer);
+					this.puertos[this.puertoSalida].writeBytes(reenvio, reenvio.length);
+				}
+				return 0;
+			}
 		}
 		return -1;
 	}
 
 	@Override
-	public int desempaquetadoADD(byte[] buffer) {
+	public int desempaquetadoADD(ArrayList<Byte>  buffer) {
 		if(desempaquetadoTrama(buffer) == 2 ) {
 			if(this.servidor) {
 				//Se formatea la informacion de los jugadores para la facilidad de la aplicacion.
 				ArrayList<DataJugador> datos_jugadores = new ArrayList<DataJugador>();
 				DataJugador.llenadoData(buffer, datos_jugadores);
 				//Codigo de llenado de informacion con los datos de los demas jugadores en conjunto con la determinacion del tablero.
+			}
+			else {
+				//Agregado de identificador y envio al siguiente nodo, pasando la informacion ADD.
+				TramaADD trama_envio = new TramaADD(Trama.getDireccionFinal(buffer), Trama.getDireccionInicial(buffer));
+				trama_envio.byteToIdentificador(buffer);
+				trama_envio.agregar_identificador(this.identificador, this.mac_address);
+				this.puertos[this.puertoSalida].writeBytes(trama_envio.envio_trama(),trama_envio.envio_trama().length);
 			}
 			return 0;
 		}
@@ -236,14 +253,15 @@ public class PController implements IProtocoloADP, IProtocoloGDP{
 	// 5: token ring
 	// 1-4: procedimientos de los protocolos ADP y GDP.
 	@Override
-	public int desempaquetadoTrama(byte[] buffer) {
+	public int desempaquetadoTrama(ArrayList<Byte>  buffer) {
 		String direccion_final = ByteConv.getMacAddress(buffer, 1);
-		String control_s_protocolo = ByteConv.byteToString(buffer[13]);
+		String control_s_protocolo = ByteConv.byteToString(buffer.get(13));
+		byte[] buffer_s;
 		try {
 			if (direccion_final != ByteConv.getMacAddress(this.mac_address.getHardwareAddress(), 0)) {
 				if (direccion_final != "FFFFFFFFFFFF") {
 					//La direccion final no coincide con el equipo que la recibe, por lo tanto se debe reenviar al siguiente nodo.
-					this.puertos[this.puertoSalida].writeBytes(buffer, buffer.length);
+					this.puertos[this.puertoSalida].writeBytes(ByteConv.arrayListByteToArrayByte(buffer), buffer.size());
 					return -1;
 				}
 			}
@@ -266,6 +284,21 @@ public class PController implements IProtocoloADP, IProtocoloGDP{
 		}
 		//Protocolo desconocido
 		return -1;
+	}
+	
+	public void RecepcionTrama() {
+		byte[] buffer= new byte[1];
+		while(this.puertos[this.puertoEntrada].bytesAvailable() > 0) {
+			this.puertos[this.puertoEntrada].readBytes(buffer, 1);
+			if(ByteConv.byteToString(buffer[0]) == "01111110") {
+				do {
+					this.buffer.add(buffer[0]);
+					this.puertos[this.puertoEntrada].readBytes(buffer, 1);
+				}while (ByteConv.byteToString(buffer[0]) == "01111110");
+			}
+			else
+				continue;
+		}
 	}
 
 }

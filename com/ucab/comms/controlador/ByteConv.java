@@ -1,5 +1,7 @@
 package controlador;
 
+import java.util.ArrayList;
+
 public final class ByteConv {
 	
 	public static String bitString(Integer variable, int length) {
@@ -15,12 +17,28 @@ public final class ByteConv {
 		return retorno;
 	}
 	
-	public static String getMacAddress(byte[] buffer, int inicial) {
+	public static String getMacAddress(byte[] bs, int inicial) {
 		String retorno = "";
 		for(int i = inicial; i < inicial + 6; i++) {
-			retorno = retorno + byteToString(buffer[i]);
+			retorno = retorno + byteToString(bs[i]);
 		}
 		return retorno;
+	}
+	
+	public static String getMacAddress(ArrayList<Byte> bs, int inicial) {
+		String retorno = "";
+		for(int i = inicial; i < inicial + 6; i++) {
+			retorno = retorno + byteToString(bs.get(i));
+		}
+		return retorno;
+	}
+	
+	public static byte[] arrayListByteToArrayByte(ArrayList<Byte> buffer) {
+		byte[] buffer_s= new byte[buffer.size()];
+		for(int i=0; i<buffer.size(); i++) {
+			buffer_s[i]=buffer.get(i).byteValue();
+		}
+		return buffer_s;
 	}
 
 }
