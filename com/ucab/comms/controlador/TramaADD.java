@@ -59,7 +59,7 @@ public class TramaADD extends Trama implements ITrama {
 		byte[] trama_envio_super= super.envio_trama();
 		for(int i=0; i < 14; i++) 
 			trama_envio[i]=trama_envio_super[i];
-		for(int i=14; i< 16 + this.identificadores.size(); i++) {
+		for(int i=14; i < 14 + this.identificadores.size(); i++) {
 			for(int j=0; j<7; j++) {
 				trama_envio[i + j + ((i - 15) * 7)] = this.identificadores.get(i)[j];
 			}
@@ -70,9 +70,9 @@ public class TramaADD extends Trama implements ITrama {
 	
 	public void byteToIdentificador(byte[] buffer) {
 		byte[] identificador = new byte[7];
-		for(int i=14; i< buffer.length; i++) {
+		for(int i=14; i< buffer.length -1; i++) {
 			for(int j=0; j<7; j++) {
-				identificador[j] = buffer[i + j + ((i - 15) * 7)];
+				identificador[j] = buffer[i + j + ((i - 14) * 7)];
 			}
 			this.identificadores.add(identificador);
 		}
@@ -80,9 +80,9 @@ public class TramaADD extends Trama implements ITrama {
 	
 	public void byteToIdentificador(ArrayList<Byte> buffer) {
 		byte[] identificador = new byte[7];
-		for(int i=14; i< buffer.size(); i++) {
+		for(int i=14; i< buffer.size()-1; i++) {
 			for(int j=0; j<7; j++) {
-				identificador[j] = buffer.get(i + j + ((i - 15) * 7));
+				identificador[j] = buffer.get(i + j + ((i - 14) * 7));
 			}
 			this.identificadores.add(identificador);
 		}

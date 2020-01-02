@@ -12,12 +12,13 @@ import com.fazecast.jSerialComm.*;
  * @version 1.1
  * 
  * PController refiere a la clase principal que se encarga del manejo
- * de los dos puertos que tendran en la funcion cada computadora.
+ * de los dos puertos que tendran en la funcion cada computadora dentro del juego y ademas aplica los protocolos ADP y GDP.
  *
  */
 public class PController implements IProtocoloADP, IProtocoloGDP{
 	
 	private boolean servidor;
+	private boolean token;
 	private long pastTime;
 	//ADP completo y establecido
 	private boolean ADPEstablished = false;
@@ -114,14 +115,17 @@ public class PController implements IProtocoloADP, IProtocoloGDP{
 		
 	}
 	
-	@Override
-	public ArrayList<Byte> lecturaTrama() {
-		// TODO Auto-generated method stub
-		//this.puertos[this.puerto2].readBytes(buffer, buffer.length);
-		while(this.puertos[this.puertoEntrada].bytesAvailable() != 0) {
-			
+	public void seteoPorts() {
+		while(this.puertos[this.puerto1].bytesAvailable() == 0 && this.puertos[this.puerto2].bytesAvailable() == 0) {
 		}
-		return null;
+		if (this.puertos[this.puerto1].bytesAvailable() != 0) {
+			this.puertoEntrada= this.puerto1;
+			this.puertoSalida= this.puerto2;
+		}
+		else {
+			this.puertoEntrada= this.puerto2;
+			this.puertoSalida= this.puerto1;
+		}
 	}
 
 	@Override
@@ -129,6 +133,7 @@ public class PController implements IProtocoloADP, IProtocoloGDP{
 		int envio_paquetes=0;
 		this.pastTime= System.currentTimeMillis();
 		long timeElapsed;
+		int puertoRandom;
 		// Se genera el inicio del protocolo ADP cumpliendo el papel del servidor.
 		//Se puede agregar como condicion dentro del while un raise event para poder salir y seleccionar cliente.
 		while (!this.ADPEstablished) {
@@ -138,12 +143,19 @@ public class PController implements IProtocoloADP, IProtocoloGDP{
 			//Espera de llegada del paquete.
 			//Se coloca cual es el puerto de entrada  y el puerto de salida
 			timeElapsed= System.currentTimeMillis();
-			this.puertoEntrada= this.puerto2;
-			this.puertoSalida= this.puerto1;
-			while(this.puertos[this.puerto2].bytesAvailable() == 0 && timeElapsed >= this.limitanteSeg * 1000 && envio_paquetes < limitante) {
+			puertoRandom = (int) Math.round(Math.random());
+			if (puertoRandom == 1) {
+				this.puertoEntrada= this.puerto1;
+				this.puertoSalida= this.puerto2;
+			}
+			else {
+				this.puertoEntrada= this.puerto2;
+				this.puertoSalida= this.puerto1;
+			}
+			while(this.puertos[this.puertoEntrada].bytesAvailable() == 0 && timeElapsed >= this.limitanteSeg * 1000 && envio_paquetes < limitante) {
 				try {
 					wait(1000);
-					this.envioADD(this.puerto1);
+					this.envioADD(this.puertoSalida);
 					envio_paquetes++;
 				}
 				catch(Exception e) {
@@ -170,18 +182,26 @@ public class PController implements IProtocoloADP, IProtocoloGDP{
 		int envio_paquetes=0;
 		this.pastTime= System.currentTimeMillis();
 		long timeElapsed;
+		int puertoRandom;
 		while(!this.ADKEstablished) {
 			//Se coloca aca el codigo para llenar la info necesaria sobre los jugadores.
 			String tablero="0000";
 			//Se coloca aca el codigo para seleccionar el valor del tablero.
 			timeElapsed= System.currentTimeMillis();
-			this.puertoEntrada= this.puerto2;
-			this.puertoSalida= this.puerto1;
+			puertoRandom = (int) Math.round(Math.random());
+			if (puertoRandom == 1) {
+				this.puertoEntrada= this.puerto1;
+				this.puertoSalida= this.puerto2;
+			}
+			else {
+				this.puertoEntrada= this.puerto2;
+				this.puertoSalida= this.puerto1;
+			}
 			//Espera de llegada del paquete final
 			System.out.println("Esperando Aknowledgemente de todos los equipos involucrados...");
-			while(this.puertos[this.puerto2].bytesAvailable() == 0 && timeElapsed >= this.limitanteSeg * 1000 && envio_paquetes < limitante) {
+			while(this.puertos[this.puertoEntrada].bytesAvailable() == 0 && timeElapsed >= this.limitanteSeg * 1000 && envio_paquetes < limitante) {
 				try {
-					this.envioADK(this.puerto2, tablero);
+					this.envioADK(this.puertoSalida, tablero);
 					wait(1000);
 					envio_paquetes++;
 				}
@@ -206,9 +226,47 @@ public class PController implements IProtocoloADP, IProtocoloGDP{
 	}
 
 	@Override
-	public void inicioClienteADDK() {
-		// TODO Auto-generated method stub
-		
+	public void inicioClienteADDK() throws Exception {
+		int recepcion_paquetes = 0;
+		while(!this.ADPEstablished) {
+			//Se coloca aca el codigo para seleccionar el identificador del equipo.
+			//Se coloca aca el codigo para seleccionar el puerto aleatorio de envio.
+			//Colocar un cronometro de espera en este punto.
+			//Espera de llegada del paquete.
+			//Se coloca cual es el puerto de entrada  y el puerto de salida
+			//Espera de llegada del paquete final
+			System.out.println("Esperando Aknowledgemente de todos los equipos involucrados...");
+			this.seteoPorts();
+			recepcion_paquetes++;
+			this.RecepcionTrama();
+			switch(this.desempaquetadoADD(this.buffer)) {
+				case -1:
+					if(recepcion_paquetes < limitante)
+						continue;
+					else {
+						throw new Exception("Tiempo agotado para establecer el protocolo ADP: error ADK");
+					}
+				case 0:
+					this.ADPEstablished = true;
+			}
+		}
+		while(!this.ADKEstablished) {
+			System.out.println("Esperando Aknowledgemente de todos los equipos involucrados...");
+			while(this.puertos[this.puertoEntrada].bytesAvailable() == 0) {
+			}
+			recepcion_paquetes++;
+			this.RecepcionTrama();
+			switch(this.desempaquetadoADK(this.buffer)) {
+				case -1:
+					if(recepcion_paquetes < limitante)
+						continue;
+					else {
+						throw new Exception("Tiempo agotado para establecer el protocolo ADP: error ADK");
+					}
+				case 0:
+					this.ADKEstablished = true;
+			}
+		}
 	}
 
 	@Override
@@ -219,7 +277,7 @@ public class PController implements IProtocoloADP, IProtocoloGDP{
 					//El servidor al tener esta informacion, comienza el protocolo GDP
 				}
 				else {
-					//Agregado de identificador y envio al siguiente nodo, pasando la informacion ADD.
+					//Llenado de informacion sobre los jugadores y el tablero. El codigo debe ir aca.
 					byte[] reenvio= ByteConv.arrayListByteToArrayByte(buffer);
 					this.puertos[this.puertoSalida].writeBytes(reenvio, reenvio.length);
 				}
@@ -299,6 +357,63 @@ public class PController implements IProtocoloADP, IProtocoloGDP{
 			else
 				continue;
 		}
+	}
+	
+	public void cambio_sentido() {
+		int cambio = this.puertoEntrada;
+		this.puertoEntrada = this.puertoSalida;
+		this.puertoSalida = cambio;
+	}
+
+	@Override
+	public void ProcesoGDP() throws Exception {
+		int recepcion_paquetes =0 ;
+		if (this.token) {
+			//Codigo de ejecucion de alguna jugada y creacion de la data para transmitirlo por la trama
+			//Llenado de la trama con la jugada. TramaGDK();
+			//Se envia la trama al puerto de salida segun la logica de juego.
+			do {
+				recepcion_paquetes++;
+				this.seteoPorts();
+				this.RecepcionTrama();
+				if(recepcion_paquetes == this.limitante) {
+					throw new Exception("Tiempo agotado para establecer el protocolo ADP: error ADK");
+				}
+			} while(this.desempaquetadoGDK(this.buffer) != 0);
+			this.token = false;
+			Trama ceder_token = new Trama();
+			this.puertos[this.puertoSalida].writeBytes(ceder_token.envio_trama_token(), ceder_token.envio_trama_token().length);
+		}
+		else {
+			while(!this.token) {
+				this.seteoPorts();
+				this.RecepcionTrama();
+				recepcion_paquetes++;
+				switch(this.desempaquetadoGDK(this.buffer)) {
+					case 1:
+						this.token = true;
+						this.ProcesoGDP();
+					break;
+					case -1:
+						if(recepcion_paquetes < limitante)
+							continue;
+						else {
+							throw new Exception("Tiempo agotado para establecer el protocolo ADP: error ADK");
+						}
+					case 0:
+						//Llenado de la informacion con los datos de la jugada por parte del paquete.
+						TramaGDK trama_recibido = new TramaGDK(this.buffer);
+						//Codigo de llenado en la interfaz.
+					break;
+				}
+			}
+		}
+	}
+
+	@Override
+	public int desempaquetadoGDK(ArrayList<Byte> buffer) {
+		// TODO Auto-generated method stub
+		return 0;
 	}
 
 }
