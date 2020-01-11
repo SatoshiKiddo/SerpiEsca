@@ -130,6 +130,7 @@ public class PController implements IProtocoloADP, IProtocoloGDP{
 	
 	public void envioGDK(int puerto) {
 		System.out.println("Enviando trama GDK...");
+		//Llenado de los datos de la jugada
 	}
 	
 	public void envioTokenRing(int puerto) {
@@ -454,8 +455,6 @@ public class PController implements IProtocoloADP, IProtocoloGDP{
 							throw new Exception("Exceso de paquetes perdidos, se finaliza la sesión de juego...");
 						}
 					case 0:
-						//Llenado de la informacion con los datos de la jugada por parte del paquete.
-						//Codigo de llenado en la interfaz.
 						TramaGDK trama_recibido = new TramaGDK(this.buffer);
 						this.puertos[this.puertoSalida].writeBytes(trama_recibido.envio_trama_token(), trama_recibido.envio_trama_token().length);
 						break;
@@ -466,8 +465,16 @@ public class PController implements IProtocoloADP, IProtocoloGDP{
 
 	@Override
 	public int desempaquetadoGDK(ArrayList<Byte> buffer) {
-		// TODO Auto-generated method stub
-		return 0;
+		int i = desempaquetadoTrama(buffer);
+		if (i == 5) {
+			return 5;
+		}
+		if(i == 4) {
+			System.out.println("--------Entro al desempaquetado GDK \n\n");
+			//Llenado de información con los datos de la jugada por parte del paquete
+			return 0;
+		}
+		return -1;
 	}
 
 }
