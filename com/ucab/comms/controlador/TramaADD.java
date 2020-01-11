@@ -53,6 +53,21 @@ public class TramaADD extends Trama implements ITrama {
 		nuevo_identificador[6]= identificador.getBytes()[0];
 		this.identificadores.add(nuevo_identificador);
 	}
+	
+	public void agregar_identificador(byte[] identificador, NetworkInterface mac_address) {
+		byte[] nuevo_identificador = new byte[7];
+		byte[] mac= null;
+		try {
+			mac= mac_address.getHardwareAddress();
+		} catch (SocketException e) {
+			e.printStackTrace();
+		}
+		for(int i=0; i< 6; i++) {
+			nuevo_identificador[i]= mac[i];
+		}
+		nuevo_identificador[6]= identificador[0];
+		this.identificadores.add(nuevo_identificador);
+	}
 
 	public byte[] envio_trama() {
 		byte[] trama_envio = new byte[14 + this.identificadores.size() * 7 + 1];

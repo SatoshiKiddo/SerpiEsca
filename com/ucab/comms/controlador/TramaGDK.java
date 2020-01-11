@@ -92,6 +92,7 @@ public class TramaGDK extends Trama implements ITrama {
 		String posicion_t = ByteConv.bitString(this.posicion,7);
 		trama_envio[15] = (byte) Short.parseShort(this.identificadorByte() + posicion_t.substring(1, 6), 2);
 		trama_envio[16] = (byte) Short.parseShort(posicion_t.substring(7) + ByteConv.bitString(this.d, 3) + ByteConv.bitString(this.se, 1) + ByteConv.bitString(this.tab,3), 2);
+		trama_envio[17] = (byte) Short.parseShort(this.preambulo,2);
 		return trama_envio;
 	}
 
