@@ -42,22 +42,18 @@ public class PController implements IProtocoloADP, IProtocoloGDP{
 		}
 		catch(Exception e) {
 			e.printStackTrace();
-			System.out.println("Error al intentar obtener la MAC del dispositivo.");
 		}
 		if (puerto_especifico_1 == null && puerto_especifico_2 == null) {
 		this.puertos = SerialPort.getCommPorts();
 			while (this.puertos.length < 2) {
 				//Busqueda de puertos disponibles y su asignacion.
 				try {
-				
 					wait(1000);
 					this.puertos = SerialPort.getCommPorts();
 				}
 				catch (Exception e) {
 					e.printStackTrace();
-					System.out.println("Error al intentar realizar intervalo de espera.");
 				}
-				System.out.println("Intentando leer los puertos disponibles ...");
 			}
 		}
 		else {
@@ -67,9 +63,7 @@ public class PController implements IProtocoloADP, IProtocoloGDP{
 		}
 		this.puertos[puerto1].setComPortParameters(2400, 8, 0, 1);
 		this.puertos[puerto2].setComPortParameters(2400, 8, 0, 1);
-		System.out.println("Abriendo los puertos de uso del equipo");
 		while(!this.puertos[this.puertoEntrada].isOpen() || !this.puertos[this.puertoSalida].isOpen()) {
-			System.out.println("Intentando nuevamente abrir los puertos de uso del equipo... " + this.servidor);
 			this.puertos[this.puerto1].openPort();
 			this.puertos[this.puerto2].openPort();
 			try {
@@ -79,8 +73,6 @@ public class PController implements IProtocoloADP, IProtocoloGDP{
 				e.printStackTrace();
 			}
 		}
-		System.out.println(this.puertos[this.puerto1].getSystemPortName() + " Abierto...");
-		System.out.println(this.puertos[this.puerto2].getSystemPortName() + " Abierto...");
 		if(servidor)
 			this.token = true;
 		else
@@ -103,7 +95,6 @@ public class PController implements IProtocoloADP, IProtocoloGDP{
 	}
 	
 	public void envioADD(int puerto) throws Exception {
-		System.out.println("Enviando trama ADD... " + this.servidor);
 		byte[] identificador_add= new byte[7];
 		TramaADD trama_envio;
 		for(int i=0; i<6; i++) {
@@ -114,12 +105,10 @@ public class PController implements IProtocoloADP, IProtocoloGDP{
 		//Coloca 65 si es A
 		trama_envio = new TramaADD(identificador_add, "FFFFFF".getBytes(), "FFFFFF".getBytes());
 		byte[] data= trama_envio.envio_trama();
-		System.out.println("-------------------Envio de trama por el puerto: " + this.puertos[this.puertoSalida].getSystemPortName() + " " + data.length);
 		this.puertos[this.puertoSalida].writeBytes(data, data.length);
 	}
 
 	public void envioADK(int puerto, String tablero) throws Exception {
-		System.out.println("Enviando trama ADK... " + this.servidor);
 		TramaADK trama_envio;
 		//Coloca 65 si es A
 		trama_envio = new TramaADK("FFFFFF".getBytes(), "FFFFFF".getBytes(), tablero);
@@ -134,20 +123,15 @@ public class PController implements IProtocoloADP, IProtocoloGDP{
 	}
 	
 	public void envioTokenRing(int puerto) {
-		System.out.println("Enviando trama TokenRing...");
 		this.token = false;
 		Trama ceder_token = new Trama();
 		this.puertos[this.puertoSalida].writeBytes(ceder_token.envio_trama_token(), ceder_token.envio_trama_token().length);
 	}
 	
 	public void seteoPorts() throws Exception{
-		System.out.println("Comprobando bytes disponibles");
 		while(this.puertos[this.puerto1].bytesAvailable() <= 0 && this.puertos[this.puerto2].bytesAvailable() <= 0) {
 			Thread.sleep(500);
-			System.out.println("Se tiene esta cantidad de bytes en el puerto " + this.puertos[this.puerto1].getSystemPortName() + " " + this.puertos[this.puerto1].bytesAvailable());
-			System.out.println("Se tiene esta cantidad de bytes en el puerto " + this.puertos[this.puerto2].getSystemPortName() + " " + this.puertos[this.puerto2].bytesAvailable());
 		}
-		System.out.println("Puertos con bytes disponibles");
 		if (this.puertos[this.puerto1].bytesAvailable() > 0) {
 			this.puertoEntrada= this.puerto1;
 			this.puertoSalida= this.puerto2;
@@ -160,7 +144,6 @@ public class PController implements IProtocoloADP, IProtocoloGDP{
 
 	@Override
 	public void inicioServidorADD() throws Exception {
-		System.out.println("--------------------------------ESTABLECIENDO ADD------------------------ SERVER");
 		int envio_paquetes=0;
 		this.pastTime= System.currentTimeMillis();
 		long timeElapsed;
@@ -171,30 +154,21 @@ public class PController implements IProtocoloADP, IProtocoloGDP{
 			//Se coloca aca el codigo para seleccionar el identificador del equipo.
 			timeElapsed= System.currentTimeMillis();
 			puertoRandom = (int) Math.round(Math.random());
-			System.out.println("Seteo de puerto aleatorio: " + puertoRandom);
 			if (puertoRandom == 1) {
-				System.out.println(this.puertos[this.puerto1].getSystemPortName() + " puerto de entrada");
-				System.out.println(this.puertos[this.puerto2].getSystemPortName() + " puerto de salida");
 				this.puertoEntrada= this.puerto1;
 				this.puertoSalida= this.puerto2;
 			}
 			else {
-				System.out.println(this.puertos[this.puerto2].getSystemPortName() + " puerto de entrada");
-				System.out.println(this.puertos[this.puerto1].getSystemPortName() + " puerto de salida");
 				this.puertoEntrada= this.puerto2;
 				this.puertoSalida= this.puerto1;
 			}
 			while(this.puertos[this.puertoEntrada].bytesAvailable() <= 0 && timeElapsed >= this.limitanteSeg * 1000 && envio_paquetes < limitante) {
 				try {
 					this.envioADD(this.puertoSalida);
-					System.out.println("!!!!!!!!Se tiene esta cantidad de bytes en el puerto " + this.puertos[this.puerto1].getSystemPortName() + " " + this.puertos[this.puerto1].bytesAvailable());
-					System.out.println("!!!!!!!!Se tiene esta cantidad de bytes en el puerto " + this.puertos[this.puerto2].getSystemPortName() + " " + this.puertos[this.puerto2].bytesAvailable());
 					envio_paquetes++;
-					System.out.println("Puerto entrada del servidor:                      " + this.puertos[this.puertoEntrada].getSystemPortName());
-					Thread.sleep(2000);
+					Thread.sleep(200);
 				}
 				catch(Exception e) {
-					System.out.println("Error al intentar esperar la llegada del paquete");
 					e.printStackTrace();
 				}
 			}
@@ -208,7 +182,6 @@ public class PController implements IProtocoloADP, IProtocoloGDP{
 						throw new Exception("Tiempo agotado para establecer el protocolo ADP: error ADD");
 					}
 				case 0:
-					System.out.println("Se recibió la trama por parte del cliente, inicio de ADK por parte del servidor -----------!!!!!");
 					this.ADPEstablished= true;
 					this.inicioServidorADK();
 				break;
@@ -218,7 +191,6 @@ public class PController implements IProtocoloADP, IProtocoloGDP{
 
 	@Override
 	public void inicioServidorADK() throws Exception {
-		System.out.println("--------------------------------ESTABLECIENDO ADK------------------------ SERVER");
 		int envio_paquetes=0;
 		this.pastTime= System.currentTimeMillis();
 		long timeElapsed;
@@ -238,15 +210,13 @@ public class PController implements IProtocoloADP, IProtocoloGDP{
 				this.puertoSalida= this.puerto1;
 			}
 			//Espera de llegada del paquete final
-			System.out.println("Esperando Aknowledgemente de todos los equipos involucrados...");
 			while(this.puertos[this.puertoEntrada].bytesAvailable() <= 0 && timeElapsed >= this.limitanteSeg * 1000 && envio_paquetes < limitante) {
 				try {
 					this.envioADK(this.puertoSalida, tablero);
 					envio_paquetes++;
-					Thread.sleep(5000);
+					Thread.sleep(200);
 				}
 				catch(Exception e) {
-					System.out.println("Error al intentar esperar la llegada del paquete");
 					e.printStackTrace();
 				}
 			}
@@ -270,22 +240,17 @@ public class PController implements IProtocoloADP, IProtocoloGDP{
 
 	@Override
 	public void inicioClienteADDK() throws Exception {
-		System.out.println("--------------------------------ESTABLECIENDO ADD------------------------ CLIENTE");
 		int recepcion_paquetes = 0;
 		while(!this.ADPEstablished) {
 			//Se coloca aca el codigo para seleccionar el identificador del equipo.
-			System.out.println("Esperando Aknowledgemente de todos los equipos involucrados...");
-			System.out.println("Seteando los puertos");
 			this.seteoPorts();
 			recepcion_paquetes++;
 			this.RecepcionTrama();
-			System.out.println("------------Recepción de trama----------\n\n\n");
 			switch(this.desempaquetadoADD(this.buffer)) {
 				case -1:
 					if(recepcion_paquetes < limitante)
 						continue;
 					else {
-						System.out.println("Error de espera al intentar recibir paquete.");
 						throw new Exception("Tiempo agotado para establecer el protocolo ADP: error ADK");
 					}
 				case 0:
@@ -293,13 +258,10 @@ public class PController implements IProtocoloADP, IProtocoloGDP{
 					break;
 			}
 		}
-		System.out.println("--------------------------------ESTABLECIENDO ADK------------------------ CLIENTE");
 		while(!this.ADKEstablished) {
-			ByteConv.pausas_De_prueba();
 			this.seteoPorts();
 			recepcion_paquetes++;
 			this.RecepcionTrama();
-			System.out.println("Se recibió trama ADK por parte del servidor");
 			switch(this.desempaquetadoADK(this.buffer)) {
 				case -1:
 					if(recepcion_paquetes < limitante)
@@ -336,15 +298,11 @@ public class PController implements IProtocoloADP, IProtocoloGDP{
 	@Override
 	public int desempaquetadoADD(ArrayList<Byte>  buffer) {
 		int i = desempaquetadoTrama(buffer);
-		System.out.println("----------------Desempaquetado ADD : "+ i);
-		System.out.println(ByteConv.printBytes(buffer));
 		if(i == 1 ) {
-			System.out.println("--------Entro al desempaquetado ADD \n\n");
 			if(this.servidor) {
 				//Se formatea la informacion de los jugadores para la facilidad de la aplicacion.
 				ArrayList<DataJugador> datos_jugadores = new ArrayList<DataJugador>();
 				DataJugador.llenadoData(buffer, datos_jugadores);
-				System.out.println("Soy el servidor, desempaquetando el paquete ADD del cliente ---------!!!!!");
 				//Codigo de llenado de informacion con los datos de los demas jugadores en conjunto con la determinacion del tablero.
 			}
 			else {
@@ -352,8 +310,6 @@ public class PController implements IProtocoloADP, IProtocoloGDP{
 				TramaADD trama_envio = new TramaADD(Trama.getDireccionFinal(buffer), Trama.getDireccionInicial(buffer));
 				trama_envio.byteToIdentificador(buffer);
 				trama_envio.agregar_identificador(this.identificador, "FFFFFF");
-				System.out.println("ENVIO DE TRAMA DESDE EL CLIENTE AL SERVIDOR trama length: " + trama_envio.envio_trama().length);
-				System.out.println(ByteConv.printBytes(trama_envio.envio_trama()));
 				this.puertos[this.puertoSalida].writeBytes(trama_envio.envio_trama(),trama_envio.envio_trama().length);
 			}
 			return 0;
@@ -365,12 +321,9 @@ public class PController implements IProtocoloADP, IProtocoloGDP{
 	// 1-4: procedimientos de los protocolos ADP y GDP.
 	@Override
 	public int desempaquetadoTrama(ArrayList<Byte>  buffer) {
-		System.out.println("Tamaño del buffer: " + buffer.size());
 		if (buffer.size() != 0) {
 			String direccion_final = ByteConv.getMacAddress(buffer, 1);
-			System.out.println("---------------------MAC RECIBIDA: " + direccion_final);
 			String control_s_protocolo = ByteConv.byteToString(buffer.get(13));
-			System.out.println("---------------------Protocolo y control de segmento: " + control_s_protocolo);
 			try {
 				if (control_s_protocolo.substring(0, 4) == "0001") {
 					return 5;
@@ -390,7 +343,6 @@ public class PController implements IProtocoloADP, IProtocoloGDP{
 				e.printStackTrace();
 			}
 		}
-		System.out.println("Desempaquetado malo");
 		//Protocolo desconocido
 		return -1;
 	}
@@ -419,6 +371,7 @@ public class PController implements IProtocoloADP, IProtocoloGDP{
 		this.puertoSalida = cambio;
 	}
 
+	//Debe ejecutarse constantemente este proceso en un while infinito dentro del juego posterior a la ejecución de ADP.
 	@Override
 	public void ProcesoGDP() throws Exception {
 		int recepcion_paquetes =0 ;
@@ -446,8 +399,7 @@ public class PController implements IProtocoloADP, IProtocoloGDP{
 				switch(this.desempaquetadoGDK(this.buffer)) {
 					case 5:
 						this.token = true;
-						this.ProcesoGDP();
-					break;
+						break;
 					case -1:
 						if(recepcion_paquetes < limitante)
 							continue;
@@ -470,7 +422,6 @@ public class PController implements IProtocoloADP, IProtocoloGDP{
 			return 5;
 		}
 		if(i == 4) {
-			System.out.println("--------Entro al desempaquetado GDK \n\n");
 			//Llenado de información con los datos de la jugada por parte del paquete
 			return 0;
 		}
