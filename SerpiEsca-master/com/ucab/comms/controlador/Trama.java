@@ -11,7 +11,7 @@ public class Trama {
 	protected String protocolo_interno="1111";
 	
 	public byte[] envio_trama(String protocolo_interno) {
-		byte[] trama_envio = new byte[14];
+		byte[] trama_envio = new byte[15];
 		this.protocolo_interno= protocolo_interno;
 		trama_envio[0]= (byte)Short.parseShort(this.preambulo,2);
 		for(int i=1; i<7; i++) {
@@ -21,11 +21,14 @@ public class Trama {
 			trama_envio[i]= direccion_inicial[i-7];
 		}
 		trama_envio[13] = (byte) Short.parseShort(control_segmento + protocolo_interno,2);
+		trama_envio[14] = (byte)Short.parseShort(this.preambulo,2);
 		return trama_envio;
 	}
 	
 	public byte[] envio_trama_token() {
 		this.control_segmento= "0001";
+		this.direccion_final = "FFFFFF".getBytes();
+		this.direccion_inicial = "FFFFFF".getBytes();
 		return envio_trama("1111");
 	}
 	

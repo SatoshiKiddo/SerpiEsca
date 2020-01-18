@@ -1,8 +1,9 @@
 package Simulación;
 
 import controlador.PController;
+import sample.Main;
 
-public class SimuladorServidor implements Runnable {
+public class SimuladorServidor  implements Runnable{
 
 	@Override
 	public void run() {

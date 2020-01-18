@@ -1,6 +1,7 @@
 package Simulación;
 
 import controlador.PController;
+import sample.Main;
 
 public class SimuladorCliente implements Runnable{
 	

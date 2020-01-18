@@ -84,9 +84,10 @@ public class TramaADD extends Trama implements ITrama {
 		byte[] trama_envio = new byte[14 + this.identificadores.size() * 7 + 1];
 		byte[] trama_envio_super= super.envio_trama("0000");
 		int traslado=0;
-		for(int i=0; i < 14; i++) 
+		for(int i=0; i < 14; i++) {
 			trama_envio[i]=trama_envio_super[i];
-		for(int i=14; i < 14 + this.identificadores.size(); i++) {
+		}
+		for(int i=14; i < 14 + this.identificadores.size() * 7; i++) {
 			for(int j=0; j<7; j++) {
 				trama_envio[i + j ] = this.identificadores.get(traslado)[j];
 			}
@@ -103,7 +104,7 @@ public class TramaADD extends Trama implements ITrama {
 		int traslado=0;
 		for(int i=0; i < 14; i++) 
 			trama_envio[i]=trama_envio_super[i];
-		for(int i=14; i < 14 + this.identificadores.size(); i++) {
+		for(int i=14; i < 14 + this.identificadores.size() * 7; i++) {
 			for(int j=0; j<7; j++) {
 				trama_envio[i + j ] = this.identificadores.get(traslado)[j];
 			}

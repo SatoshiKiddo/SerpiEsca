@@ -1,5 +1,10 @@
 package sample;
 
+import java.util.ArrayList;
+
+import controlador.DataJugada;
+import controlador.DataJugador;
+import controlador.PController;
 import javafx.animation.AnimationTimer;
 import javafx.animation.PathTransition;
 import javafx.animation.SequentialTransition;
@@ -27,9 +32,15 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 
 public class Main extends Application {
+	
+	public PController controlador_comm;
 
     public int playerPos[][] = new int[10][10];
     public int sAndLPos[][] = new int[6][6];
+    public Thread comunicacion;
+    
+    public int jugador=0;
+    public boolean jugadaHecha=false;
   
     public int rand;
     public Label randResult;
@@ -85,15 +96,346 @@ public class Main extends Application {
 
     public boolean gameStart = false;
     public Button gameButton;
+    public Button gameButtonS;
 
     private Group titleGroup = new Group();
+	private Button button_jugada;
+	
+	public void handle_cliente(ActionEvent event) {
+        if(!gameStart) {
+        	controlador_comm = new PController(false,"COM2","COM4");
+        	controlador_comm.set_interfaz(this);
+        	try {
+				controlador_comm.inicioClienteADDK();
+			} catch (Exception e) {
+				System.out.println("Error de conexión cliente.");
+				e.printStackTrace();
+			}
+        	comunicacion= new Thread(controlador_comm);
+        	comunicacion.start();
+            randResult.setText("Dice Result");
+            randResult.setTranslateX(820);
+            gameButton.setText("Game Started");
+            player1XPos = 40;
+            player1YPos = 760;
+
+            player2XPos = 40;
+            player2YPos = 760;
+            
+            player3XPos = 40;
+            player3YPos = 760;
+            
+            player4XPos = 40;
+            player4YPos = 760;
+
+            player1Position = 1;
+            player2Position = 1;
+            player3Position = 1;
+            player4Position = 1;
+
+            posCir1 = 1;
+            posCir2 = 1;
+            posCir3 = 1;
+            posCir4 = 1;
+            
+            if(player1 != null) {
+            	player1.setTranslateX(player1XPos);
+            	player1.setTranslateY(player1YPos);
+            }
+            if(player2 != null) {
+            	player2.setTranslateX(player2XPos);
+            	player2.setTranslateY(player2YPos);
+            }
+            if(player3 != null) {
+            	player3.setTranslateX(player2XPos);
+            	player3.setTranslateY(player2YPos);
+            }
+            if(player4 != null) {
+            	player4.setTranslateX(player2XPos);
+            	player4.setTranslateY(player2YPos);
+            }
+
+            gameStart = true;
+            gameButton.setDisable(true);
+            gameButtonS.setDisable(true);
+            
+            
+            
+            
+            //Quien Empieza
+            /*
+            rand = (int)(Math.random() * 2 +1);
+            if(rand == 1)
+            {
+                player1Turn = true;
+                gameResult.setText("Turno jugador 1");
+            }else
+            {
+                player2Turn = true;
+                gameResult.setText("Turno jugador 2");
+            }*/
+        }
+
+    }
+	
+	public void handle_servidor(ActionEvent event) {
+        if(!gameStart) {
+        	controlador_comm = new PController(true,"COM1","COM3");
+        	controlador_comm.set_interfaz(this);
+        	try {
+				controlador_comm.inicioServidorADD();
+			} catch (Exception e) {
+				System.out.println("Error en conexión Servidor");
+				e.printStackTrace();
+			}
+        	comunicacion= new Thread(controlador_comm);
+        	comunicacion.start();
+            randResult.setText("Dice Result");
+            randResult.setTranslateX(820);
+            gameButton.setText("Game Started");
+            player1XPos = 40;
+            player1YPos = 760;
+
+            player2XPos = 40;
+            player2YPos = 760;
+            
+            player3XPos = 40;
+            player3YPos = 760;
+            
+            player4XPos = 40;
+            player4YPos = 760;
+
+            player1Position = 1;
+            player2Position = 1;
+            player3Position = 1;
+            player4Position = 1;
+
+            posCir1 = 1;
+            posCir2 = 1;
+            posCir3 = 1;
+            posCir4 = 1;
+            
+            if(player1 != null) {
+            	player1.setTranslateX(player1XPos);
+            	player1.setTranslateY(player1YPos);
+            }
+            if(player2 != null) {
+            	player2.setTranslateX(player2XPos);
+            	player2.setTranslateY(player2YPos);
+            }
+            if(player3 != null) {
+            	player3.setTranslateX(player2XPos);
+            	player3.setTranslateY(player2YPos);
+            }
+            if(player4 != null) {
+            	player4.setTranslateX(player2XPos);
+            	player4.setTranslateY(player2YPos);
+            }
+
+            gameStart = true;
+            gameButton.setDisable(true);
+            gameButtonS.setDisable(true);
+            
+            
+            
+            
+            //Quien Empieza
+            /*
+            rand = (int)(Math.random() * 2 +1);
+            if(rand == 1)
+            {
+                player1Turn = true;
+                gameResult.setText("Turno jugador 1");
+            }else
+            {
+                player2Turn = true;
+                gameResult.setText("Turno jugador 2");
+            }*/
+        }
+
+    }
+	
+	public void jugada_externa(DataJugada jugada) {
+		System.out.println("Jugada : " + jugada.posicion + " jugador: " + jugada.identificador);
+		switch(jugada.identificador) {
+		case "00000000":
+			System.out.println("Entro?");
+			player1.setVisible(true);
+			player1Position = jugada.posicion;
+			movePlayer1();
+			translatePlayer(player1XPos, player1YPos, player1);
+			break;
+		case "00000001":
+			System.out.println("Entro?2");
+			player2Position = jugada.posicion;
+			movePlayer2();
+			translatePlayer(player2XPos, player2YPos, player2);
+			break;
+		case "00000010":
+			player3Position = jugada.posicion;
+			movePlayer3();
+			translatePlayer(player3XPos, player3YPos, player3);
+			break;
+		case "00000011":
+			player4Position = jugada.posicion;
+			movePlayer4();
+			translatePlayer(player4XPos, player4YPos, player4);
+			break;
+		}
+	}
+	
+	public void Turno(boolean turno) {
+		this.button_jugada.setDisable(!turno);
+	}
+	
+	public void jugada(int jugador) {
+		DataJugada jugada= null;
+		System.out.println( "Este es el jugador " + this.jugador);
+		switch(jugador) {
+		case 1:
+			getDiceValue();
+			randResult.setText(String.valueOf(rand));
+			player1Position += rand;
+			movePlayer1();
+			translatePlayer(player1XPos, player1YPos, player1);
+			gameResult.setText("Jugada realizada, esperando jugada del otro jugador...");
+			jugada = new DataJugada("00", player1Position, 0, 1, rand);
+			break;
+		case 2:
+			getDiceValue();
+			randResult.setText(String.valueOf(rand));
+			player2Position += rand;
+			movePlayer2();
+			translatePlayer(player2XPos, player2YPos, player2);
+			gameResult.setText("Jugada realizada, esperando jugada del otro jugador...");
+			jugada = new DataJugada("01", player2Position, 0, 1, rand);
+			break;
+		case 3:
+			getDiceValue();
+			randResult.setText(String.valueOf(rand));
+			player3Position += rand;
+			movePlayer3();
+			translatePlayer(player3XPos, player3YPos, player3);
+			gameResult.setText("Jugada realizada, esperando jugada del otro jugador...");
+			jugada = new DataJugada("10", player3Position, 0, 1, rand);
+			break;
+		case 4:
+			getDiceValue();
+			randResult.setText(String.valueOf(rand));
+			player4Position += rand;
+			movePlayer4();
+			translatePlayer(player4XPos, player4YPos, player4);
+			gameResult.setText("Jugada realizada, esperando jugada del otro jugador...");
+			jugada = new DataJugada("11", player4Position, 0, 1, rand);
+			break;
+		}
+		System.out.println("Jugada hecha: " + jugada.posicion + " jugador: " + jugada.identificador);
+		controlador_comm.ejecución_Jugada(jugada);
+	}
+    
+    public void llenado_Data_Servidor(ArrayList<Byte> buffer) {
+    	ArrayList<DataJugador> jugadores = new ArrayList<DataJugador>();
+    	DataJugador.llenadoDataADD(buffer, jugadores);
+    	for( DataJugador jugador: jugadores) {
+    		switch (jugador.getIdentificador()) {
+    			case "A":
+    		        player1.setTranslateX(player1XPos);
+    		        player1.setTranslateY(player1YPos);
+    		        player1.setVisible(true);
+    		        break;
+    			case "B":
+    		        player2.setTranslateX(player2XPos);
+    		        player2.setTranslateY(player2YPos);
+    		        player2.setVisible(true);
+    		        break;
+    			case "C":
+    		        player3.setTranslateX(player3XPos);
+    		        player3.setTranslateY(player3YPos);
+    		        player3.setVisible(true);
+    		        break;
+    			case "D":
+    		        player4.setTranslateX(player4XPos);
+    		        player4.setTranslateY(player4YPos);
+    		        player4.setVisible(true);
+    		        break;
+    		}
+    	}
+    }
+    
+    public void llenado_Data_Cliente(ArrayList<Byte> buffer) {
+    	//Si hay selección de tablero, acá se selecciona el mismo a través de la clase DataJugador.
+    	ArrayList<DataJugador> jugadores = new ArrayList<DataJugador>();
+    	DataJugador.llenadoDataADK(buffer, jugadores);
+    	for( DataJugador jugador: jugadores) {
+    		switch (jugador.getIdentificador()) {
+    			case "A":
+    		        player1.setTranslateX(player1XPos);
+    		        player1.setTranslateY(player1YPos);
+    		        player1.setVisible(true);
+    		        break;
+    			case "B":
+    		        player2.setTranslateX(player2XPos);
+    		        player2.setTranslateY(player2YPos);
+    		        player2.setVisible(true);
+    		        break;
+    			case "C":
+    		        player3.setTranslateX(player3XPos);
+    		        player3.setTranslateY(player3YPos);
+    		        player2.setVisible(true);
+    		        break;
+    			case "D":
+    		        player4.setTranslateX(player4XPos);
+    		        player4.setTranslateY(player4YPos);
+    		        player2.setVisible(true);
+    		        break;
+    		}
+    	}
+    }
 
     private Parent createContent(){
+    	
 
+		player1 = new Circle(40);
+        player1.setId("Player 1");
+        player1.setFill(Color.GREEN);
+        player1.getStyleClass().add("Style.css");
+        player1.setTranslateX(2000);
+        player1.setTranslateY(2000);
+        player1.setVisible(false);
+
+		player2 = new Circle(40);
+        player2.setId("Player 2");
+        player2.setFill(Color.RED);
+        player2.getStyleClass().add("Style.css");
+        player2.setVisible(false);
+
+        player2.setTranslateX(2000);
+        player2.setTranslateY(2000);
+        
+		player3 = new Circle(40);
+        player3.setId("Player 3");
+        player3.setFill(Color.BLUE);
+        player3.getStyleClass().add("Style.css");
+
+        player3.setTranslateX(2000);
+        player3.setTranslateY(2000);
+        player3.setVisible(false);
+        
+		player4 = new Circle(40);
+        player4.setId("Player 4");
+        player4.setFill(Color.BLACK);
+        player4.getStyleClass().add("Style.css");
+        
+
+        player4.setTranslateX(2000);
+        player4.setTranslateY(2000);
+        player4.setVisible(false);
+    	
         Pane root = new Pane();
         root.setPrefSize(width * tileSize, (height * tileSize) + 80);
         root.getChildren().addAll(titleGroup);
 
+    	System.out.println("Error?");
         for(int i=0; i<width; i++){
             for(int j=0; j<height; j++){
                 Tile tile = new Tile(tileSize, tileSize);
@@ -104,205 +446,43 @@ public class Main extends Application {
             }
 
         }
-       
-        player1 = new Circle(40);
-        player1.setId("Player 1");
-        player1.setFill(Color.GREEN);
-        player1.getStyleClass().add("Style.css");
-        player1.setTranslateX(player1XPos);
-        player1.setTranslateY(player1YPos);
 
-        player2 = new Circle(40);
-        player2.setId("Player 2");
-        player2.setFill(Color.RED);
-        player2.getStyleClass().add("Style.css");
-        player2.setTranslateX(player2XPos);
-        player2.setTranslateY(player2YPos);
-        
-        player3 = new Circle(40);
-        player3.setId("Player 3");
-        player3.setFill(Color.BLUE);
-        player3.getStyleClass().add("Style.css");
-        player3.setTranslateX(player3XPos);
-        player3.setTranslateY(player3YPos);
-        
-        player4 = new Circle(40);
-        player4.setId("Player 4");
-        player4.setFill(Color.BLACK);
-        player4.getStyleClass().add("Style.css");
-        player4.setTranslateX(player4XPos);
-        player4.setTranslateY(player4YPos);
-
-        Button button1 = new Button("Jugador 1");
-        button1.setTranslateX(820);
-        button1.setTranslateY(400);
-        button1.setOnAction(new EventHandler<ActionEvent>() {
+        this.button_jugada = new Button("Jugada");
+        this.button_jugada.setTranslateX(820);
+        this.button_jugada.setTranslateY(400);
+        this.button_jugada.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
                 if(gameStart){
-                    if(player1Turn){
-                        getDiceValue();
-                        randResult.setText(String.valueOf(rand));
-                        player1Position += rand;
-                        movePlayer1();
-                        translatePlayer(player1XPos, player1YPos, player1);
-                                                
-                        player1Turn = false;
-                        player2Turn = true;
-                        player3Turn = false;
-                        player4Turn = false;
-                        if(gameStart)
-                        gameResult.setText("Turno jugador 1");
-                    }
+                	jugada(jugador);
+                	jugadaHecha=true;
                 }
             }
         });
         
-
-        Button button2 = new Button("Jugador 2");
-        button2.setTranslateX(900);
-        button2.setTranslateY(400);
-        button2.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                if(gameStart){
-                    if(player2Turn){
-                        getDiceValue();
-                        randResult.setText(String.valueOf(rand));
-                        player2Position += rand;
-                        movePlayer2();
-                        translatePlayer(player2XPos, player2YPos, player2);
-                                                
-                        player2Turn = false;
-                        player1Turn = false;
-                        player3Turn = true;
-                        player4Turn = false;
-                        
-                        if(gameStart)
-                        gameResult.setText("Turno jugador 2");
- 
-                    }
-                }
-            }
-        });
-        
-        
-        Button button3 = new Button("Jugador 3");
-        button3.setTranslateX(820);
-        button3.setTranslateY(500);
-        button3.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                if(gameStart){
-                    if(player3Turn){
-                        getDiceValue();
-                        randResult.setText(String.valueOf(rand));
-                        player3Position += rand;
-                        movePlayer3();
-                        translatePlayer(player3XPos, player3YPos, player3);
-                                                
-                        player2Turn = false;
-                        player1Turn = false;
-                        player3Turn = false;
-                        player4Turn = true;
-                        if(gameStart)
-                        gameResult.setText("Turno jugador 3");
- 
-                    }
-                }
-            }
-        });
-        
-        
-        Button button4 = new Button("Jugador 4");
-        button4.setTranslateX(900);
-        button4.setTranslateY(500);
-        button4.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                if(gameStart){
-                    if(player4Turn){
-                        getDiceValue();
-                        randResult.setText(String.valueOf(rand));
-                        player4Position += rand;
-                        movePlayer4();
-                        translatePlayer(player4XPos, player4YPos, player4);
-                                                
-                        player2Turn = false;
-                        player1Turn = true;
-                        player3Turn = false;
-                        player4Turn = false;
-                        if(gameStart)
-                        gameResult.setText("Turno jugador 4");
- 
-                    }
-                }
-            }
-        });
-
-        
-        gameButton = new Button("Start Game");
+        gameButton = new Button("Servidor");
         gameButton.setTranslateX(820);
         gameButton.setTranslateY(300);
 
         gameButton.setOnAction(new EventHandler<ActionEvent>() {
 
+			@Override
+			public void handle(ActionEvent arg0) {
+				handle_servidor(arg0);
+			}
+        	
+        });
+        
+        gameButtonS = new Button("Cliente");
+        gameButtonS.setTranslateX(900);
+        gameButtonS.setTranslateY(300);
+
+        gameButtonS.setOnAction(new EventHandler<ActionEvent>() {
+
             @Override
-            public void handle(ActionEvent event) {
-                if(!gameStart) {
-                    gameStart = true;
-                    randResult.setText("Dice Result");
-                    randResult.setTranslateX(820);
-                    gameButton.setText("Game Started");
-                    player1XPos = 40;
-                    player1YPos = 760;
-
-                    player2XPos = 40;
-                    player2YPos = 760;
-                    
-                    player3XPos = 40;
-                    player3YPos = 760;
-                    
-                    player4XPos = 40;
-                    player4YPos = 760;
-
-                    player1Position = 1;
-                    player2Position = 1;
-                    player3Position = 1;
-                    player4Position = 1;
-
-                    posCir1 = 1;
-                    posCir2 = 1;
-                    posCir3 = 1;
-                    posCir4 = 1;
-
-                    player1.setTranslateX(player1XPos);
-                    player1.setTranslateY(player1YPos);
-                    player2.setTranslateX(player2XPos);
-                    player2.setTranslateY(player2YPos);
-                    player3.setTranslateX(player2XPos);
-                    player3.setTranslateY(player2YPos);
-                    player4.setTranslateX(player2XPos);
-                    player4.setTranslateY(player2YPos);
-                    
-                    
-                    
-                    
-                    //Quien Empieza
-                    
-                    rand = (int)(Math.random() * 2 +1);
-                    if(rand == 1)
-                    {
-                        player1Turn = true;
-                        gameResult.setText("Turno jugador 1");
-                    }else
-                    {
-                        player2Turn = true;
-                        gameResult.setText("Turno jugador 2");
-                    }
-                }
-
-            }
+            public void handle(ActionEvent arg0) {
+				handle_cliente(arg0);
+			}
         });
 
         randResult = new Label("Dice Result");
@@ -313,6 +493,7 @@ public class Main extends Application {
         gameResult.setTranslateX(890);
         gameResult.setTranslateY(700);
 
+
         Image img = new Image("snakebg.jpeg");
         ImageView imageView = new ImageView();
         imageView.setImage(img);
@@ -320,10 +501,10 @@ public class Main extends Application {
         imageView.setFitHeight(800);
 
 
-        titleGroup.getChildren().addAll(imageView,player1, player2, player3, player4, button1, button2, button3, button4,  gameButton, randResult, gameResult);
+        titleGroup.getChildren().addAll(imageView, button_jugada,  gameButton, randResult, gameResult, gameButtonS, player1, player2, player3, player4);
+        button_jugada.setDisable(true);
 
         return root;
-
     }
     
     // Lanzar dado 
@@ -439,9 +620,6 @@ public class Main extends Application {
         player2Turn = true;
         player3Turn = false;
         player4Turn = false;
-        
-        if(gameStart)
-        gameResult.setText("Turno jugador 2");
     }
 
     public void movePlayer2() {
@@ -551,9 +729,6 @@ public class Main extends Application {
         player1Turn = false;
         player3Turn = true;
         player4Turn = false;
-        
-        if(gameStart)
-        gameResult.setText("Tunor jugador 3");
     }
     
     
@@ -664,9 +839,6 @@ public class Main extends Application {
         player1Turn = false;
         player3Turn = false;
         player4Turn = true;
-        
-        if(gameStart)
-        gameResult.setText("Tunor jugador 4");
     }
     
     
@@ -778,9 +950,6 @@ public class Main extends Application {
         player1Turn = true;
         player3Turn = false;
         player4Turn = false;
-        
-        if(gameStart)
-        gameResult.setText("Tunor jugador 1");
     }
     
     
